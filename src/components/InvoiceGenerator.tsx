@@ -1,47 +1,93 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { LogOut, Printer, Save } from 'lucide-react';
-import { format } from 'date-fns';
-import { Invoice } from '../types/invoice';
-import { db } from '../services/database';
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { LogOut, Printer, Save } from "lucide-react";
+import { format } from "date-fns";
+import { Invoice } from "../types/invoice";
+import { db } from "../services/database";
 
 const convertToWords = (amount: number): string => {
-  const units = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
-  const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
-  const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
-  
+  const units = [
+    "",
+    "uno",
+    "dos",
+    "tres",
+    "cuatro",
+    "cinco",
+    "seis",
+    "siete",
+    "ocho",
+    "nueve",
+  ];
+  const teens = [
+    "diez",
+    "once",
+    "doce",
+    "trece",
+    "catorce",
+    "quince",
+    "dieciséis",
+    "diecisiete",
+    "dieciocho",
+    "diecinueve",
+  ];
+  const tens = [
+    "",
+    "",
+    "veinte",
+    "treinta",
+    "cuarenta",
+    "cincuenta",
+    "sesenta",
+    "setenta",
+    "ochenta",
+    "noventa",
+  ];
+  const hundreds = ["", "cien", "doscientos"];
+
   const numberToWords = (n: number): string => {
     if (n < 10) return units[n];
     if (n < 20) return teens[n - 10];
-    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' y ' + units[n % 10] : '');
-    return 'número fuera de rango';
+    if (n < 100)
+      return tens[Math.floor(n / 10)] + (n % 10 ? " y " + units[n % 10] : "");
+    if (n <= 200)
+      return (
+        hundreds[Math.floor(n / 100)] +
+        (n % 100 ? " " + numberToWords(n % 100) : "")
+      );
+    return "número fuera de rango";
   };
 
   const quetzales = Math.floor(amount);
   const cents = Math.round((amount - quetzales) * 100);
 
-  return `${numberToWords(quetzales)} quetzales con ${numberToWords(cents)} centavos`;
+  if (cents === 0) {
+    return `${numberToWords(quetzales)} quetzales exactos`;
+  } else {
+    return `${numberToWords(quetzales)} quetzales con ${numberToWords(
+      cents
+    )} centavos`;
+  }
 };
 
 const InvoiceGenerator = () => {
   const { logout } = useAuth();
   const [invoice, setInvoice] = useState<Invoice>({
-    number: '',
-    amount: 0,
-    receivedFrom: '',
-    amountInWords: '',
-    concept: '',
-    location: '',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    receivedBy: ''
+    number: "",
+    amount: "", // Cambiado a cadena vacía
+    receivedFrom: "",
+    amountInWords: "",
+    concept: "",
+    location: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    receivedBy: "",
   });
 
   const handleAmountChange = (value: string) => {
     const amount = parseFloat(value) || 0;
     setInvoice({
       ...invoice,
-      amount,
-      amountInWords: convertToWords(amount)
+      amount: value, // Guardar el valor como cadena
+      amountInWords: convertToWords(amount),
     });
   };
 
@@ -49,10 +95,10 @@ const InvoiceGenerator = () => {
     e.preventDefault();
     try {
       await db.saveInvoice(invoice);
-      alert('Recibo guardado exitosamente');
+      alert("Recibo guardado exitosamente");
       // Reset form or redirect as needed
     } catch (error) {
-      alert('Error al guardar el recibo');
+      alert("Error al guardar el recibo");
       console.error(error);
     }
   };
@@ -67,7 +113,9 @@ const InvoiceGenerator = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-white">Generador de Recibos</h1>
+              <h1 className="text-2xl font-bold text-white">
+                Generador de Recibos
+              </h1>
             </div>
             <button
               onClick={logout}
@@ -85,89 +133,117 @@ const InvoiceGenerator = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-300">No. de Recibo</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  No. de Recibo
+                </label>
                 <input
                   type="text"
                   value={invoice.number}
-                  onChange={(e) => setInvoice({ ...invoice, number: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, number: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300">Cantidad (Q)</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Cantidad (Q)
+                </label>
                 <input
                   type="number"
                   step="0.01"
                   value={invoice.amount}
                   onChange={(e) => handleAmountChange(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-300">Recibí de</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Recibí de
+                </label>
                 <input
                   type="text"
                   value={invoice.receivedFrom}
-                  onChange={(e) => setInvoice({ ...invoice, receivedFrom: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, receivedFrom: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-300">Cantidad en Letras</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Cantidad en Letras
+                </label>
                 <input
                   type="text"
                   value={invoice.amountInWords}
                   readOnly
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-300 shadow-sm"
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-300 shadow-sm p-3"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-300">Por Concepto de</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Por Concepto de
+                </label>
                 <textarea
                   value={invoice.concept}
-                  onChange={(e) => setInvoice({ ...invoice, concept: e.target.value })}
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, concept: e.target.value })
+                  }
                   rows={3}
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300">Lugar</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Lugar
+                </label>
                 <input
                   type="text"
                   value={invoice.location}
-                  onChange={(e) => setInvoice({ ...invoice, location: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, location: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300">Fecha</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Fecha
+                </label>
                 <input
                   type="date"
                   value={invoice.date}
-                  onChange={(e) => setInvoice({ ...invoice, date: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, date: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-300">Recibí Conforme</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Recibí Conforme
+                </label>
                 <input
                   type="text"
                   value={invoice.receivedBy}
-                  onChange={(e) => setInvoice({ ...invoice, receivedBy: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, receivedBy: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
               </div>
