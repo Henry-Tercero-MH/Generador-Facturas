@@ -131,6 +131,154 @@ const InvoiceGenerator = () => {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="bg-gray-800 shadow rounded-lg p-6 border border-gray-700">
           <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="text-center">
+                {" "}
+                <label
+                  htmlFor="factura"
+                  className="text-[34px] text-center font-bold"
+                >
+                  Factura
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">
+                    No. de Recibo
+                  </label>
+                  <input
+                    type="text"
+                    value={invoice.number}
+                    onChange={(e) =>
+                      setInvoice({ ...invoice, number: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">
+                    Cantidad (Q)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoice.amount}
+                    onChange={(e) => handleAmountChange(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                    required
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Recibí de
+                  </label>
+                  <input
+                    type="text"
+                    value={invoice.receivedFrom}
+                    onChange={(e) =>
+                      setInvoice({ ...invoice, receivedFrom: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                    required
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Cantidad en Letras
+                  </label>
+                  <input
+                    type="text"
+                    value={invoice.amountInWords}
+                    readOnly
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-300 shadow-sm p-3"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Por Concepto de
+                  </label>
+                  <textarea
+                    value={invoice.concept}
+                    onChange={(e) =>
+                      setInvoice({ ...invoice, concept: e.target.value })
+                    }
+                    rows={3}
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">
+                    Lugar
+                  </label>
+                  <input
+                    type="text"
+                    value={invoice.location}
+                    onChange={(e) =>
+                      setInvoice({ ...invoice, location: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">
+                    Fecha
+                  </label>
+                  <input
+                    type="date"
+                    value={invoice.date}
+                    onChange={(e) =>
+                      setInvoice({ ...invoice, date: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                    required
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Recibí Conforme
+                  </label>
+                  <input
+                    type="text"
+                    value={invoice.receivedBy}
+                    onChange={(e) =>
+                      setInvoice({ ...invoice, receivedBy: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Imprimir
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Guardar
+                </button>
+              </div>
+            </form>
+
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-300">
