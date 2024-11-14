@@ -231,7 +231,7 @@ const InvoiceGenerator = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300">
-                    Fecha
+                    Fecha en que se genera el recibo
                   </label>
                   <input
                     type="date"
