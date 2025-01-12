@@ -1,31 +1,40 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { KeyRound, User } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { KeyRound, User } from "lucide-react";
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     const success = await login(username, password);
     if (success) {
-      navigate('/');
+      navigate("/");
     } else {
-      setError('Credenciales inválidas');
+      setError("Credenciales inválidas");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md border border-gray-700">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url('https://plus.unsplash.com/premium_photo-1668024966086-bd66ba04262f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cGFpc2FqZXxlbnwwfHwwfHx8MA%3D%3D')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="bg-gray-800/90 rounded-lg shadow-xl p-8 w-full max-w-md border border-gray-700">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Generador de Recibos</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Generador de Recibos
+          </h1>
           <p className="text-gray-400 mt-2">Inicia sesión en tu cuenta</p>
         </div>
 

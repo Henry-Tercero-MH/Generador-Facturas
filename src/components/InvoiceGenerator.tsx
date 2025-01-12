@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { LogOut, Printer, Save } from "lucide-react";
 import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Invoice } from "../types/invoice";
 import { jsPDF } from "jspdf";
 
@@ -74,14 +75,30 @@ const InvoiceGenerator = () => {
   const [invoice, setInvoice] = useState<Invoice>({
     number: "",
     amount: "", // Cambiado a cadena vacía
-    receivedFrom: "",
     amountInWords: "",
     concept: "",
     location: "",
     date: format(new Date(), "yyyy-MM-dd"),
     receivedBy: "",
   });
-  const [numero, setNumero] = useState('');
+  const [numero, setNumero] = useState("");
+  const [nombre, setNombre] = useState(""); // Estado para el nombre
+  const [apellido, setApellido] = useState(""); // Estado para el apellido
+
+  const meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
 
   const handleAmountChange = (value: string) => {
     const amount = parseFloat(value) || 0;
@@ -112,35 +129,65 @@ const InvoiceGenerator = () => {
     const doc = new jsPDF();
     doc.text(`Factura No: ${invoice.number}`, 10, 10);
     doc.text(`Cantidad: Q${invoice.amount}`, 10, 20);
-    doc.text(`Recibí de: ${invoice.receivedFrom}`, 10, 30);
+    doc.text(`Recibí de: ${nombre} ${apellido}`, 10, 30);
     doc.text(`Cantidad en Letras: ${invoice.amountInWords}`, 10, 40);
     doc.text(`Por Concepto de: ${invoice.concept}`, 10, 50);
     doc.text(`Lugar: ${invoice.location}`, 10, 60);
-    doc.text(`Fecha: ${invoice.date}`, 10, 70);
+    doc.text(
+      `Fecha: ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}`,
+      10,
+      70
+    );
     doc.text(`Recibí Conforme: ${invoice.receivedBy}`, 10, 80);
     return doc;
   };
 
   const enviarWhatsApp = (numero: string, urlPDF: string) => {
     const mensaje = `Hola, aquí está tu archivo: ${urlPDF}`;
-    const enlaceWhatsApp = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
-    window.open(enlaceWhatsApp, '_blank');
+    const enlaceWhatsApp = `https://wa.me/${numero}?text=${encodeURIComponent(
+      mensaje
+    )}`;
+    window.open(enlaceWhatsApp, "_blank");
   };
 
   const handleEnviar = () => {
     const doc = generarPDF();
-    const pdfBlob = doc.output('blob');
+    const pdfBlob = doc.output("blob");
     const urlPDF = URL.createObjectURL(pdfBlob);
     enviarWhatsApp(numero, urlPDF);
   };
 
+  const handleGuardarPDF = () => {
+    const fecha = new Date(invoice.date);
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    const año = fecha.getFullYear();
+    const fileName = `Recibo_${nombre}_${apellido}_${dia}_${mes}_${año}.pdf`;
+    const doc = generarPDF();
+    doc.save(fileName);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div
+      className="min-h-screen bg-gray-900 text-gray-100"
+      style={{
+        backgroundImage: `url('https://images.unsplash.com/photo-1648876672455-56cc2aa32b65?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBhaXNhamUlMjBwY3xlbnwwfHwwfHx8MA%3D%3D')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <nav className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-white">
+              <h1
+                className="text-2xl font-bold text-white"
+                style={{
+                  backgroundImage: `url('https://images.unsplash.com/photo-1648876672455-56cc2aa32b65?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBhaXNhamUlMjBwY3xlbnwwfHwwfHx8MA%3D%3D')`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
                 Generador de Recibos
               </h1>
             </div>
@@ -155,8 +202,22 @@ const InvoiceGenerator = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-gray-800 shadow rounded-lg p-6 border border-gray-700">
+      <main
+        className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dGV4dHVyYXxlbnwwfHwwfHx8MA%3D%3D')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div
+          className="bg-gray-800 shadow rounded-lg p-6 border border-gray-700"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1527049979667-990f1d0d8e7f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHRleHR1cmF8ZW58MHx8MHx8fDA%3D')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="text-center">
               <label
@@ -197,16 +258,27 @@ const InvoiceGenerator = () => {
                 />
               </div>
 
-              <div className="sm:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-300">
-                  Recibí de
+                  Nombre
                 </label>
                 <input
                   type="text"
-                  value={invoice.receivedFrom}
-                  onChange={(e) =>
-                    setInvoice({ ...invoice, receivedFrom: e.target.value })
-                  }
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300">
+                  Apellido
+                </label>
+                <input
+                  type="text"
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
                   className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                   required
                 />
@@ -284,28 +356,32 @@ const InvoiceGenerator = () => {
                 />
               </div>
             </div>
-
-            <div className="flex justify-end space-x-4">
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimir
-              </button>
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Guardar
-              </button>
-            </div>
           </form>
 
+          <div className="flex justify-end space-x-4 mt-6">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimir
+            </button>
+            <button
+              type="button"
+              onClick={handleGuardarPDF}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Guardar PDF
+            </button>
+          </div>
+
           <div className="mt-6">
-            <label htmlFor="numero" className="block text-sm font-medium text-gray-300">
+            <label
+              htmlFor="numero"
+              className="block text-sm font-medium text-gray-300"
+            >
               Número de Teléfono:
             </label>
             <input
