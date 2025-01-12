@@ -127,18 +127,66 @@ const InvoiceGenerator = () => {
 
   const generarPDF = () => {
     const doc = new jsPDF();
-    doc.text(`Factura No: ${invoice.number}`, 10, 10);
-    doc.text(`Cantidad: Q${invoice.amount}`, 10, 20);
-    doc.text(`Recibí de: ${nombre} ${apellido}`, 10, 30);
-    doc.text(`Cantidad en Letras: ${invoice.amountInWords}`, 10, 40);
-    doc.text(`Por Concepto de: ${invoice.concept}`, 10, 50);
-    doc.text(`Lugar: ${invoice.location}`, 10, 60);
+
+    // Establecer el fondo del PDF
+    const imgData =
+      "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxzZWFyY2h8MXx8ZmFjdHVyYXxlbnwwfHwwfHx8MA%3D%3D";
+    doc.addImage(imgData, "JPEG", 0, 0, 210, 297); // Ajustar la imagen al tamaño de la página A4
+
+    // Añadir título
+    doc.setFontSize(22);
+    doc.setTextColor(40);
+    doc.text("Factura", 105, 30, null, null, "center");
+
+    // Añadir detalles de la factura con un diseño estructurado
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+
+    // Dibujar un rectángulo para el encabezado
+    doc.setDrawColor(0);
+    doc.setFillColor(230, 230, 230);
+    doc.rect(10, 40, 190, 20, "FD");
+
+    // Añadir texto al encabezado
+    doc.text(`Factura No: ${invoice.number}`, 15, 50);
     doc.text(
-      `Fecha: ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}`,
-      10,
-      70
+      `Fecha: ${format(new Date(invoice.date), "dd 'de' MMMM 'de' yyyy", {
+        locale: es,
+      })}`,
+      150,
+      50
     );
-    doc.text(`Recibí Conforme: ${invoice.receivedBy}`, 10, 80);
+
+    // Dibujar un rectángulo para los detalles del cliente
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, 70, 190, 30, "FD");
+
+    // Añadir texto a los detalles del cliente
+    doc.text(`Recibí de: ${nombre} ${apellido}`, 15, 80);
+    doc.text(`Lugar: ${invoice.location}`, 15, 90);
+
+    // Dibujar un rectángulo para los detalles de la cantidad
+    doc.setFillColor(250, 250, 250);
+    doc.rect(10, 110, 190, 30, "FD");
+
+    // Añadir texto a los detalles de la cantidad
+    doc.text(`Cantidad: Q${invoice.amount}`, 15, 120);
+    doc.text(`Cantidad en Letras: ${invoice.amountInWords}`, 15, 130);
+
+    // Dibujar un rectángulo para el concepto
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, 150, 190, 30, "FD");
+
+    // Añadir texto al concepto
+    doc.text(`Por Concepto de: ${invoice.concept}`, 15, 160);
+
+    // Dibujar un rectángulo para la firma
+    doc.setFillColor(250, 250, 250);
+    doc.rect(10, 190, 190, 20, "FD");
+
+    // Añadir texto a la firma
+    doc.text(`Recibí Conforme: ${invoice.receivedBy}`, 15, 200);
+
     return doc;
   };
 
@@ -183,7 +231,7 @@ const InvoiceGenerator = () => {
               <h1
                 className="text-2xl font-bold text-white"
                 style={{
-                  backgroundImage: `url('https://images.unsplash.com/photo-1648876672455-56cc2aa32b65?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBhaXNhamUlMjBwY3xlbnwwfHwwfHx8MA%3D%3D')`,
+                  backgroundImage: `url('https://plus.unsplash.com/premium_photo-1685656440548-d8cad874d5d8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGV4dHVyYSUyMG9zY3VyYXxlbnwwfHwwfHx8MA%3D%3D')`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
@@ -222,7 +270,7 @@ const InvoiceGenerator = () => {
             <div className="text-center">
               <label
                 htmlFor="factura"
-                className="text-[34px] text-center font-bold"
+                className="text-[34px] text-center font-bold text-white"
               >
                 Factura
               </label>
@@ -399,6 +447,9 @@ const InvoiceGenerator = () => {
             </button>
           </div>
         </div>
+        <label htmlFor="">
+          - Diseño Enero 2025 by hemisterhe -Todos los Derechos Reservados
+        </label>
       </main>
     </div>
   );

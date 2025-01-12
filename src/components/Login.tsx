@@ -25,7 +25,7 @@ const Login = () => {
     <div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
-        backgroundImage: `url('https://plus.unsplash.com/premium_photo-1668024966086-bd66ba04262f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cGFpc2FqZXxlbnwwfHwwfHx8MA%3D%3D')`,
+        backgroundImage: `url('https://images.unsplash.com/photo-1578883817332-0d26b8a0b3ab?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGVuZXJvfGVufDB8fDB8fHww')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
