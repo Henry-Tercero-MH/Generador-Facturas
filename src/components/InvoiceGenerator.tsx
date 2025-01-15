@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { LogOut, Printer, Save } from "lucide-react";
 import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Invoice } from "../types/invoice";
-import { db } from "../services/database";
+import { jsPDF } from "jspdf";
 
 const convertToWords = (amount: number): string => {
   const units = [
@@ -74,13 +75,30 @@ const InvoiceGenerator = () => {
   const [invoice, setInvoice] = useState<Invoice>({
     number: "",
     amount: "", // Cambiado a cadena vacía
-    receivedFrom: "",
     amountInWords: "",
     concept: "",
     location: "",
     date: format(new Date(), "yyyy-MM-dd"),
     receivedBy: "",
   });
+  const [numero, setNumero] = useState("");
+  const [nombre, setNombre] = useState(""); // Estado para el nombre
+  const [apellido, setApellido] = useState(""); // Estado para el apellido
+
+  const meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
 
   const handleAmountChange = (value: string) => {
     const amount = parseFloat(value) || 0;
@@ -94,7 +112,7 @@ const InvoiceGenerator = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await db.saveInvoice(invoice);
+      // Aquí deberías guardar la factura en tu base de datos si tuvieras una
       alert("Recibo guardado exitosamente");
       // Reset form or redirect as needed
     } catch (error) {
@@ -107,13 +125,117 @@ const InvoiceGenerator = () => {
     window.print();
   };
 
+  const generarPDF = () => {
+    const doc = new jsPDF();
+
+    // Establecer el fondo del PDF
+    const imgData =
+      "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxzZWFyY2h8MXx8ZmFjdHVyYXxlbnwwfHwwfHx8MA%3D%3D";
+    doc.addImage(imgData, "JPEG", 0, 0, 210, 297); // Ajustar la imagen al tamaño de la página A4
+
+    // Añadir título
+    doc.setFontSize(22);
+    doc.setTextColor(40);
+    doc.text("Factura", 105, 30, null, null, "center");
+
+    // Añadir detalles de la factura con un diseño estructurado
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+
+    // Dibujar un rectángulo para el encabezado
+    doc.setDrawColor(0);
+    doc.setFillColor(230, 230, 230);
+    doc.rect(10, 40, 190, 20, "FD");
+
+    // Añadir texto al encabezado
+    doc.text(`Factura No: ${invoice.number}`, 15, 50);
+    doc.text(
+      `Fecha: ${format(new Date(invoice.date), "dd 'de' MMMM 'de' yyyy", {
+        locale: es,
+      })}`,
+      150,
+      50
+    );
+
+    // Dibujar un rectángulo para los detalles del cliente
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, 70, 190, 30, "FD");
+
+    // Añadir texto a los detalles del cliente
+    doc.text(`Recibí de: ${nombre} ${apellido}`, 15, 80);
+    doc.text(`Lugar: ${invoice.location}`, 15, 90);
+
+    // Dibujar un rectángulo para los detalles de la cantidad
+    doc.setFillColor(250, 250, 250);
+    doc.rect(10, 110, 190, 30, "FD");
+
+    // Añadir texto a los detalles de la cantidad
+    doc.text(`Cantidad: Q${invoice.amount}`, 15, 120);
+    doc.text(`Cantidad en Letras: ${invoice.amountInWords}`, 15, 130);
+
+    // Dibujar un rectángulo para el concepto
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, 150, 190, 30, "FD");
+
+    // Añadir texto al concepto
+    doc.text(`Por Concepto de: ${invoice.concept}`, 15, 160);
+
+    // Dibujar un rectángulo para la firma
+    doc.setFillColor(250, 250, 250);
+    doc.rect(10, 190, 190, 20, "FD");
+
+    // Añadir texto a la firma
+    doc.text(`Recibí Conforme: ${invoice.receivedBy}`, 15, 200);
+
+    return doc;
+  };
+
+  const enviarWhatsApp = (numero: string, urlPDF: string) => {
+    const mensaje = `Hola, aquí está tu archivo: ${urlPDF}`;
+    const enlaceWhatsApp = `https://wa.me/${numero}?text=${encodeURIComponent(
+      mensaje
+    )}`;
+    window.open(enlaceWhatsApp, "_blank");
+  };
+
+  const handleEnviar = () => {
+    const doc = generarPDF();
+    const pdfBlob = doc.output("blob");
+    const urlPDF = URL.createObjectURL(pdfBlob);
+    enviarWhatsApp(numero, urlPDF);
+  };
+
+  const handleGuardarPDF = () => {
+    const fecha = new Date(invoice.date);
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    const año = fecha.getFullYear();
+    const fileName = `Recibo_${nombre}_${apellido}_${dia}_${mes}_${año}.pdf`;
+    const doc = generarPDF();
+    doc.save(fileName);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div
+      className="min-h-screen bg-gray-900 text-gray-100"
+      style={{
+        backgroundImage: `url('https://images.unsplash.com/photo-1648876672455-56cc2aa32b65?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBhaXNhamUlMjBwY3xlbnwwfHwwfHx8MA%3D%3D')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <nav className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-white">
+              <h1
+                className="text-2xl font-bold text-white"
+                style={{
+                  backgroundImage: `url('https://plus.unsplash.com/premium_photo-1685656440548-d8cad874d5d8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGV4dHVyYSUyMG9zY3VyYXxlbnwwfHwwfHx8MA%3D%3D')`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
                 Generador de Recibos
               </h1>
             </div>
@@ -128,158 +250,206 @@ const InvoiceGenerator = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-gray-800 shadow rounded-lg p-6 border border-gray-700">
+      <main
+        className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dGV4dHVyYXxlbnwwfHwwfHx8MA%3D%3D')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div
+          className="bg-gray-800 shadow rounded-lg p-6 border border-gray-700"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1527049979667-990f1d0d8e7f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHRleHR1cmF8ZW58MHx8MHx8fDA%3D')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
           <form onSubmit={handleSubmit} className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="text-center">
-                {" "}
-                <label
-                  htmlFor="factura"
-                  className="text-[34px] text-center font-bold"
-                >
-                  Factura
+            <div className="text-center">
+              <label
+                htmlFor="factura"
+                className="text-[34px] text-center font-bold text-white"
+              >
+                Factura
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-300">
+                  No. de Recibo
                 </label>
+                <input
+                  type="text"
+                  value={invoice.number}
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, number: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
               </div>
 
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300">
-                    No. de Recibo
-                  </label>
-                  <input
-                    type="text"
-                    value={invoice.number}
-                    onChange={(e) =>
-                      setInvoice({ ...invoice, number: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300">
-                    Cantidad (Q)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={invoice.amount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Recibí de
-                  </label>
-                  <input
-                    type="text"
-                    value={invoice.receivedFrom}
-                    onChange={(e) =>
-                      setInvoice({ ...invoice, receivedFrom: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Cantidad en Letras
-                  </label>
-                  <input
-                    type="text"
-                    value={invoice.amountInWords}
-                    readOnly
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-300 shadow-sm p-3"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Por Concepto de
-                  </label>
-                  <textarea
-                    value={invoice.concept}
-                    onChange={(e) =>
-                      setInvoice({ ...invoice, concept: e.target.value })
-                    }
-                    rows={3}
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300">
-                    Lugar
-                  </label>
-                  <input
-                    type="text"
-                    value={invoice.location}
-                    onChange={(e) =>
-                      setInvoice({ ...invoice, location: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300">
-                    Fecha en que se genera el recibo
-                  </label>
-                  <input
-                    type="date"
-                    value={invoice.date}
-                    onChange={(e) =>
-                      setInvoice({ ...invoice, date: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Recibí Conforme
-                  </label>
-                  <input
-                    type="text"
-                    value={invoice.receivedBy}
-                    onChange={(e) =>
-                      setInvoice({ ...invoice, receivedBy: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300">
+                  Cantidad (Q)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={invoice.amount}
+                  onChange={(e) => handleAmountChange(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
               </div>
 
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  Imprimir
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Guardar
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-300">
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
               </div>
-            </form>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300">
+                  Apellido
+                </label>
+                <input
+                  type="text"
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-300">
+                  Cantidad en Letras
+                </label>
+                <input
+                  type="text"
+                  value={invoice.amountInWords}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-300 shadow-sm p-3"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-300">
+                  Por Concepto de
+                </label>
+                <textarea
+                  value={invoice.concept}
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, concept: e.target.value })
+                  }
+                  rows={3}
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300">
+                  Lugar
+                </label>
+                <input
+                  type="text"
+                  value={invoice.location}
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, location: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300">
+                  Fecha en que se genera el recibo
+                </label>
+                <input
+                  type="date"
+                  value={invoice.date}
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, date: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-300">
+                  Recibí Conforme
+                </label>
+                <input
+                  type="text"
+                  value={invoice.receivedBy}
+                  onChange={(e) =>
+                    setInvoice({ ...invoice, receivedBy: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+                  required
+                />
+              </div>
+            </div>
           </form>
+
+          <div className="flex justify-end space-x-4 mt-6">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimir
+            </button>
+            <button
+              type="button"
+              onClick={handleGuardarPDF}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Guardar PDF
+            </button>
+          </div>
+
+          <div className="mt-6">
+            <label
+              htmlFor="numero"
+              className="block text-sm font-medium text-gray-300"
+            >
+              Número de Teléfono:
+            </label>
+            <input
+              type="text"
+              id="numero"
+              value={numero}
+              onChange={(e) => setNumero(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
+            />
+            <button
+              onClick={handleEnviar}
+              className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-green-500"
+            >
+              Enviar por WhatsApp
+            </button>
+          </div>
         </div>
+        <label htmlFor="">
+          - Diseño Enero 2025 by hemisterhe -Todos los Derechos Reservados
+        </label>
       </main>
     </div>
   );
